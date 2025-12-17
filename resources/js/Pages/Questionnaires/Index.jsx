@@ -125,23 +125,6 @@ export default function Index({ questionnaires, pagination, filters }) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Questionnaires</h2>
-                        <p className="mt-1 text-sm text-gray-600">Create and manage niche assessment questionnaires</p>
-                    </div>
-                    <button
-                        onClick={openCreateModal}
-                        className="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
-                    >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Questionnaire
-                    </button>
-                </div>
-            }
         >
             <Head title="Questionnaires Management" />
 
@@ -150,9 +133,20 @@ export default function Index({ questionnaires, pagination, filters }) {
                     {/* Search Section */}
                     <div className="mb-6 sm:mb-8">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                                Search Questionnaires
-                            </label>
+                            <div className="flex items-center justify-between mb-4">
+                                <label htmlFor="search" className="block text-sm font-medium text-gray-700">
+                                    Search Questionnaires
+                                </label>
+                                <button
+                                    onClick={openCreateModal}
+                                    className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add Questionnaire
+                                </button>
+                            </div>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,7 +180,7 @@ export default function Index({ questionnaires, pagination, filters }) {
                                 </svg>
                                 <h3 className="mt-4 text-lg font-medium text-gray-900">No questionnaires found</h3>
                                 <p className="mt-2 text-sm text-gray-500">Get started by creating your first questionnaire.</p>
-                                <button
+                                {/* <button
                                     onClick={openCreateModal}
                                     className="mt-6 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
                                 >
@@ -194,7 +188,7 @@ export default function Index({ questionnaires, pagination, filters }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                     </svg>
                                     Create First Questionnaire
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     ) : (

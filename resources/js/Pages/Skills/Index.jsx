@@ -96,23 +96,6 @@ export default function Index({ skills, categories, pagination, filters }) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Skills Management</h2>
-                        <p className="mt-1 text-sm text-gray-600">Manage your IT skills catalog</p>
-                    </div>
-                    <button
-                        onClick={openCreateModal}
-                        className="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
-                    >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add New Skill
-                    </button>
-                </div>
-            }
         >
             <Head title="Skills Management" />
 
@@ -121,6 +104,18 @@ export default function Index({ skills, categories, pagination, filters }) {
                     {/* Filters Section */}
                     <div className="mb-6 sm:mb-8">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                                <button
+                                    onClick={openCreateModal}
+                                    className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New Skill
+                                </button>
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {/* Search */}
                                 <div className="lg:col-span-2">
