@@ -16,18 +16,42 @@ class QuestionnaireController extends Controller
         $this->firebase = $firebase;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $questionnaires = $this->firebase->readAll($this->collection);
+        $perPage = 10;
+        $page = $request->input('page', 1);
+        $search = $request->input('search', '');
+        
+        $allQuestionnaires = $this->firebase->readAll($this->collection);
+        
+        // Filter questionnaires
+        $filtered = array_filter($allQuestionnaires, function($q) use ($search) {
+            return empty($search) || 
+                stripos($q['title'], $search) !== false || 
+                stripos($q['niche'] ?? '', $search) !== false ||
+                stripos($q['description'] ?? '', $search) !== false;
+        });
+        
+        // Paginate
+        $total = count($filtered);
+        $lastPage = ceil($total / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $paginated = array_slice($filtered, $offset, $perPage);
         
         return Inertia::render('Questionnaires/Index', [
-            'questionnaires' => $questionnaires
+            'questionnaires' => array_values($paginated),
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => (int) $page,
+                'last_page' => (int) $lastPage,
+                'from' => $offset + 1,
+                'to' => min($offset + $perPage, $total),
+            ],
+            'filters' => [
+                'search' => $search,
+            ]
         ]);
-    }
-
-    public function create()
-    {
-        return Inertia::render('Questionnaires/Create');
     }
 
     public function store(Request $request)
@@ -51,25 +75,10 @@ class QuestionnaireController extends Controller
         $result = $this->firebase->create($this->collection, $validated);
 
         if ($result) {
-            return redirect()->route('questionnaires.index')->with('success', 'Questionnaire created successfully');
+            return back()->with('success', 'Questionnaire created successfully');
         }
 
         return back()->with('error', 'Failed to create questionnaire');
-    }
-
-    public function edit(string $id)
-    {
-        $questionnaire = $this->firebase->read($this->collection, $id);
-        
-        if (!$questionnaire) {
-            return redirect()->route('questionnaires.index')->with('error', 'Questionnaire not found');
-        }
-
-        $questionnaire['_id'] = $id;
-
-        return Inertia::render('Questionnaires/Edit', [
-            'questionnaire' => $questionnaire
-        ]);
     }
 
     public function update(Request $request, string $id)
@@ -91,7 +100,7 @@ class QuestionnaireController extends Controller
         $result = $this->firebase->update($this->collection, $id, $validated);
 
         if ($result) {
-            return redirect()->route('questionnaires.index')->with('success', 'Questionnaire updated successfully');
+            return back()->with('success', 'Questionnaire updated successfully');
         }
 
         return back()->with('error', 'Failed to update questionnaire');
@@ -102,10 +111,22 @@ class QuestionnaireController extends Controller
         $result = $this->firebase->delete($this->collection, $id);
 
         if ($result) {
-            return redirect()->route('questionnaires.index')->with('success', 'Questionnaire deleted successfully');
+            return back()->with('success', 'Questionnaire deleted successfully');
         }
 
         return back()->with('error', 'Failed to delete questionnaire');
+    }
+
+    public function show(string $id)
+    {
+        $questionnaire = $this->firebase->read($this->collection, $id);
+        
+        if (!$questionnaire) {
+            return response()->json(['error' => 'Questionnaire not found'], 404);
+        }
+
+        $questionnaire['_id'] = $id;
+        return response()->json($questionnaire);
     }
 
     public function getByNiche(string $niche)

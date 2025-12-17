@@ -1,0 +1,302 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, router, useForm } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+
+export default function Index({ questionnaires, pagination, filters }) {
+    const [showModal, setShowModal] = useState(false);
+    const [editingQuestionnaire, setEditingQuestionnaire] = useState(null);
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    const { data, setData, post, put, processing, errors, reset } = useForm({
+        title: '',
+        description: '',
+        niche: '',
+        questions: [{ question: '', type: 'multiple_choice', options: [''], required: true }],
+        active: true,
+    });
+
+    const openCreateModal = () => {
+        reset();
+        setData('questions', [{ question: '', type: 'multiple_choice', options: [''], required: true }]);
+        setEditingQuestionnaire(null);
+        setShowModal(true);
+    };
+
+    const openEditModal = async (questionnaire) => {
+        const response = await fetch(route('questionnaires.show', questionnaire._id));
+        const qData = await response.json();
+        setData({
+            title: qData.title || '',
+            description: qData.description || '',
+            niche: qData.niche || '',
+            questions: qData.questions || [{ question: '', type: 'multiple_choice', options: [''], required: true }],
+            active: qData.active ?? true,
+        });
+        setEditingQuestionnaire(qData);
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditingQuestionnaire(null);
+        reset();
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        
+        if (editingQuestionnaire) {
+            put(route('questionnaires.update', editingQuestionnaire._id), {
+                preserveScroll: true,
+                onSuccess: () => closeModal(),
+            });
+        } else {
+            post(route('questionnaires.store'), {
+                preserveScroll: true,
+                onSuccess: () => closeModal(),
+            });
+        }
+    };
+
+    const handleDelete = (id) => {
+        if (confirm('Are you sure you want to delete this questionnaire?')) {
+            router.delete(route('questionnaires.destroy', id), {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const toggleActive = (id, currentStatus) => {
+        router.patch(route('questionnaires.update', id), { active: !currentStatus }, {
+            preserveScroll: true
+        });
+    };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchTerm !== filters.search) {
+                router.get(route('questionnaires.index'), { search: searchTerm }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const changePage = (page) => {
+        router.get(route('questionnaires.index'), { page, search: searchTerm }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const addQuestion = () => {
+        setData('questions', [...data.questions, { question: '', type: 'multiple_choice', options: [''], required: true }]);
+    };
+
+    const removeQuestion = (index) => {
+        setData('questions', data.questions.filter((_, i) => i !== index));
+    };
+
+    const updateQuestion = (index, field, value) => {
+        const newQuestions = [...data.questions];
+        newQuestions[index][field] = value;
+        setData('questions', newQuestions);
+    };
+
+    const addOption = (questionIndex) => {
+        const newQuestions = [...data.questions];
+        newQuestions[questionIndex].options = [...(newQuestions[questionIndex].options || []), ''];
+        setData('questions', newQuestions);
+    };
+
+    const updateOption = (questionIndex, optionIndex, value) => {
+        const newQuestions = [...data.questions];
+        newQuestions[questionIndex].options[optionIndex] = value;
+        setData('questions', newQuestions);
+    };
+
+    const removeOption = (questionIndex, optionIndex) => {
+        const newQuestions = [...data.questions];
+        newQuestions[questionIndex].options = newQuestions[questionIndex].options.filter((_, i) => i !== optionIndex);
+        setData('questions', newQuestions);
+    };
+
+    return (
+        <AuthenticatedLayout
+            header={
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">Questionnaires Management</h2>
+                    <button onClick={openCreateModal} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                        Add New Questionnaire
+                    </button>
+                </div>
+            }
+        >
+            <Head title="Questionnaires Management" />
+
+            <div className="py-12">
+                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                        <div className="p-6">
+                            <div className="mb-6">
+                                <input
+                                    type="text"
+                                    placeholder="Search questionnaires..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                />
+                            </div>
+
+                            {questionnaires.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500">
+                                    No questionnaires found. <button onClick={openCreateModal} className="text-indigo-600 hover:text-indigo-800">Create your first questionnaire</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-4 mb-6">
+                                        {questionnaires.map((questionnaire) => (
+                                            <div key={questionnaire._id} className="border rounded-lg p-6 hover:shadow-md transition">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-2">
+                                                            <h3 className="text-lg font-semibold text-gray-900">{questionnaire.title}</h3>
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${questionnaire.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                                {questionnaire.active ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-600 mb-2"><span className="font-medium">Niche:</span> {questionnaire.niche}</p>
+                                                        {questionnaire.description && <p className="text-sm text-gray-600 mb-2">{questionnaire.description}</p>}
+                                                        <p className="text-xs text-gray-500">{questionnaire.questions?.length || 0} questions</p>
+                                                    </div>
+                                                    <div className="flex gap-2 ml-4">
+                                                        <button onClick={() => toggleActive(questionnaire._id, questionnaire.active)} className="text-sm text-blue-600 hover:text-blue-800">
+                                                            {questionnaire.active ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                        <button onClick={() => openEditModal(questionnaire)} className="text-sm text-indigo-600 hover:text-indigo-800">Edit</button>
+                                                        <button onClick={() => handleDelete(questionnaire._id)} className="text-sm text-red-600 hover:text-red-800">Delete</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {pagination.last_page > 1 && (
+                                        <div className="flex items-center justify-between border-t pt-4">
+                                            <div className="text-sm text-gray-700">Showing {pagination.from} to {pagination.to} of {pagination.total} results</div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => changePage(pagination.current_page - 1)} disabled={pagination.current_page === 1} className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">Previous</button>
+                                                {[...Array(pagination.last_page)].map((_, i) => {
+                                                    const page = i + 1;
+                                                    if (page === 1 || page === pagination.last_page || (page >= pagination.current_page - 1 && page <= pagination.current_page + 1)) {
+                                                        return <button key={page} onClick={() => changePage(page)} className={`px-3 py-1 rounded border ${page === pagination.current_page ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50'}`}>{page}</button>;
+                                                    } else if (page === pagination.current_page - 2 || page === pagination.current_page + 2) {
+                                                        return <span key={page}>...</span>;
+                                                    }
+                                                    return null;
+                                                })}
+                                                <button onClick={() => changePage(pagination.current_page + 1)} disabled={pagination.current_page === pagination.last_page} className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">Next</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {showModal && (
+                <div className="fixed inset-0 z-50 overflow-y-auto" onClick={closeModal}>
+                    <div className="flex min-h-screen items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+                        <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                            <div className="sticky top-0 bg-white px-6 py-4 border-b z-10">
+                                <h3 className="text-lg font-semibold">{editingQuestionnaire ? 'Edit Questionnaire' : 'Add New Questionnaire'}</h3>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Title *</label>
+                                        <input type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} className="w-full rounded-lg border-gray-300" required />
+                                        {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Target Niche *</label>
+                                        <input type="text" value={data.niche} onChange={(e) => setData('niche', e.target.value)} className="w-full rounded-lg border-gray-300" required />
+                                        {errors.niche && <p className="mt-1 text-sm text-red-600">{errors.niche}</p>}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Description</label>
+                                    <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={2} className="w-full rounded-lg border-gray-300" />
+                                </div>
+
+                                <label className="flex items-center">
+                                    <input type="checkbox" checked={data.active} onChange={(e) => setData('active', e.target.checked)} className="rounded border-gray-300 text-indigo-600" />
+                                    <span className="ml-2 text-sm">Active (visible to users)</span>
+                                </label>
+
+                                <div className="border-t pt-4">
+                                    <div className="flex justify-between mb-4">
+                                        <h4 className="font-medium">Questions</h4>
+                                        <button type="button" onClick={addQuestion} className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700">Add Question</button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {data.questions.map((q, qIndex) => (
+                                            <div key={qIndex} className="border rounded-lg p-4 bg-gray-50">
+                                                <div className="flex justify-between mb-3">
+                                                    <h5 className="font-medium">Question {qIndex + 1}</h5>
+                                                    {data.questions.length > 1 && <button type="button" onClick={() => removeQuestion(qIndex)} className="text-sm text-red-600">Remove</button>}
+                                                </div>
+                                                <input type="text" value={q.question} onChange={(e) => updateQuestion(qIndex, 'question', e.target.value)} placeholder="Enter question" className="w-full rounded-lg border-gray-300 mb-3" required />
+                                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                                    <select value={q.type} onChange={(e) => updateQuestion(qIndex, 'type', e.target.value)} className="rounded-lg border-gray-300">
+                                                        <option value="multiple_choice">Multiple Choice</option>
+                                                        <option value="rating">Rating</option>
+                                                        <option value="text">Text</option>
+                                                        <option value="yes_no">Yes/No</option>
+                                                    </select>
+                                                    <label className="flex items-center">
+                                                        <input type="checkbox" checked={q.required} onChange={(e) => updateQuestion(qIndex, 'required', e.target.checked)} className="rounded border-gray-300" />
+                                                        <span className="ml-2 text-sm">Required</span>
+                                                    </label>
+                                                </div>
+                                                {q.type === 'multiple_choice' && (
+                                                    <div className="pl-4 space-y-2">
+                                                        <div className="flex justify-between">
+                                                            <p className="text-sm font-medium">Options:</p>
+                                                            <button type="button" onClick={() => addOption(qIndex)} className="text-xs text-indigo-600">+ Add Option</button>
+                                                        </div>
+                                                        {q.options?.map((opt, oIndex) => (
+                                                            <div key={oIndex} className="flex gap-2">
+                                                                <input type="text" value={opt} onChange={(e) => updateOption(qIndex, oIndex, e.target.value)} placeholder={`Option ${oIndex + 1}`} className="flex-1 rounded-lg border-gray-300 text-sm" />
+                                                                {q.options.length > 1 && <button type="button" onClick={() => removeOption(qIndex, oIndex)} className="text-sm text-red-600">×</button>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-4 sticky bottom-0 bg-white border-t -mx-6 px-6 py-4">
+                                    <button type="submit" disabled={processing} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                        {processing ? 'Saving...' : (editingQuestionnaire ? 'Update' : 'Create')}
+                                    </button>
+                                    <button type="button" onClick={closeModal} className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </AuthenticatedLayout>
+    );
+}

@@ -33,17 +33,15 @@ Route::middleware('auth')->group(function () {
 
     // Skills Management Routes
     Route::get('/skills', [SkillController::class, 'index'])->name('skills.index');
-    Route::get('/skills/create', [SkillController::class, 'create'])->name('skills.create');
+    Route::get('/skills/{id}', [SkillController::class, 'show'])->name('skills.show');
     Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
-    Route::get('/skills/{id}/edit', [SkillController::class, 'edit'])->name('skills.edit');
     Route::put('/skills/{id}', [SkillController::class, 'update'])->name('skills.update');
     Route::delete('/skills/{id}', [SkillController::class, 'destroy'])->name('skills.destroy');
     
     // Questionnaires Management Routes
     Route::get('/questionnaires', [QuestionnaireController::class, 'index'])->name('questionnaires.index');
-    Route::get('/questionnaires/create', [QuestionnaireController::class, 'create'])->name('questionnaires.create');
+    Route::get('/questionnaires/{id}', [QuestionnaireController::class, 'show'])->name('questionnaires.show');
     Route::post('/questionnaires', [QuestionnaireController::class, 'store'])->name('questionnaires.store');
-    Route::get('/questionnaires/{id}/edit', [QuestionnaireController::class, 'edit'])->name('questionnaires.edit');
     Route::put('/questionnaires/{id}', [QuestionnaireController::class, 'update'])->name('questionnaires.update');
     Route::patch('/questionnaires/{id}', [QuestionnaireController::class, 'update'])->name('questionnaires.update.patch');
     Route::delete('/questionnaires/{id}', [QuestionnaireController::class, 'destroy'])->name('questionnaires.destroy');

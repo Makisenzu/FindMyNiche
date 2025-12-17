@@ -16,18 +16,52 @@ class SkillController extends Controller
         $this->firebase = $firebase;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $skills = $this->firebase->readAll($this->collection);
+        $perPage = 12;
+        $page = $request->input('page', 1);
+        $search = $request->input('search', '');
+        $category = $request->input('category', '');
+        
+        $allSkills = $this->firebase->readAll($this->collection);
+        
+        // Filter skills
+        $filteredSkills = array_filter($allSkills, function($skill) use ($search, $category) {
+            $matchesSearch = empty($search) || 
+                stripos($skill['name'], $search) !== false || 
+                stripos($skill['description'] ?? '', $search) !== false;
+            
+            $matchesCategory = empty($category) || $skill['category'] === $category;
+            
+            return $matchesSearch && $matchesCategory;
+        });
+        
+        // Get unique categories
+        $categories = array_unique(array_column($allSkills, 'category'));
+        sort($categories);
+        
+        // Paginate
+        $total = count($filteredSkills);
+        $lastPage = ceil($total / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $paginatedSkills = array_slice($filteredSkills, $offset, $perPage);
         
         return Inertia::render('Skills/Index', [
-            'skills' => $skills
+            'skills' => array_values($paginatedSkills),
+            'categories' => $categories,
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => (int) $page,
+                'last_page' => (int) $lastPage,
+                'from' => $offset + 1,
+                'to' => min($offset + $perPage, $total),
+            ],
+            'filters' => [
+                'search' => $search,
+                'category' => $category,
+            ]
         ]);
-    }
-
-    public function create()
-    {
-        return Inertia::render('Skills/Create');
     }
 
     public function store(Request $request)
@@ -45,25 +79,10 @@ class SkillController extends Controller
         $result = $this->firebase->create($this->collection, $validated);
 
         if ($result) {
-            return redirect()->route('skills.index')->with('success', 'Skill created successfully');
+            return back()->with('success', 'Skill created successfully');
         }
 
         return back()->with('error', 'Failed to create skill');
-    }
-
-    public function edit(string $id)
-    {
-        $skill = $this->firebase->read($this->collection, $id);
-        
-        if (!$skill) {
-            return redirect()->route('skills.index')->with('error', 'Skill not found');
-        }
-
-        $skill['_id'] = $id;
-
-        return Inertia::render('Skills/Edit', [
-            'skill' => $skill
-        ]);
     }
 
     public function update(Request $request, string $id)
@@ -80,7 +99,7 @@ class SkillController extends Controller
         $result = $this->firebase->update($this->collection, $id, $validated);
 
         if ($result) {
-            return redirect()->route('skills.index')->with('success', 'Skill updated successfully');
+            return back()->with('success', 'Skill updated successfully');
         }
 
         return back()->with('error', 'Failed to update skill');
@@ -91,10 +110,22 @@ class SkillController extends Controller
         $result = $this->firebase->delete($this->collection, $id);
 
         if ($result) {
-            return redirect()->route('skills.index')->with('success', 'Skill deleted successfully');
+            return back()->with('success', 'Skill deleted successfully');
         }
 
         return back()->with('error', 'Failed to delete skill');
+    }
+
+    public function show(string $id)
+    {
+        $skill = $this->firebase->read($this->collection, $id);
+        
+        if (!$skill) {
+            return response()->json(['error' => 'Skill not found'], 404);
+        }
+
+        $skill['_id'] = $id;
+        return response()->json($skill);
     }
 
     public function getByCategory(string $category)
