@@ -6,6 +6,8 @@ use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FirebaseTestController;
 use App\Http\Controllers\FirebaseCrudController;
+use App\Http\Controllers\SkillController;
+use App\Http\Controllers\QuestionnaireController;
 
 Route::get('/', function () {
     return Inertia::render('Auth/Login', [
@@ -28,10 +30,39 @@ Route::middleware('auth')->group(function () {
     Route::get('/careers', function () {
         return Inertia::render('Careers');
     })->name('careers');
+
+    // Skills Management Routes
+    Route::get('/skills', [SkillController::class, 'index'])->name('skills.index');
+    Route::get('/skills/create', [SkillController::class, 'create'])->name('skills.create');
+    Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
+    Route::get('/skills/{id}/edit', [SkillController::class, 'edit'])->name('skills.edit');
+    Route::put('/skills/{id}', [SkillController::class, 'update'])->name('skills.update');
+    Route::delete('/skills/{id}', [SkillController::class, 'destroy'])->name('skills.destroy');
+    
+    // Questionnaires Management Routes
+    Route::get('/questionnaires', [QuestionnaireController::class, 'index'])->name('questionnaires.index');
+    Route::get('/questionnaires/create', [QuestionnaireController::class, 'create'])->name('questionnaires.create');
+    Route::post('/questionnaires', [QuestionnaireController::class, 'store'])->name('questionnaires.store');
+    Route::get('/questionnaires/{id}/edit', [QuestionnaireController::class, 'edit'])->name('questionnaires.edit');
+    Route::put('/questionnaires/{id}', [QuestionnaireController::class, 'update'])->name('questionnaires.update');
+    Route::patch('/questionnaires/{id}', [QuestionnaireController::class, 'update'])->name('questionnaires.update.patch');
+    Route::delete('/questionnaires/{id}', [QuestionnaireController::class, 'destroy'])->name('questionnaires.destroy');
 });
 
 Route::get('/test-firestore', [FirebaseTestController::class, 'testFirestore']);
 Route::get('/firebase-data/{collection}', [FirebaseTestController::class, 'getData']);
+
+// API Routes for mobile app
+Route::prefix('api')->group(function () {
+    // Skills API
+    Route::get('/skills', [SkillController::class, 'index'])->name('api.skills.index');
+    Route::get('/skills/categories', [SkillController::class, 'getCategories'])->name('api.skills.categories');
+    Route::get('/skills/category/{category}', [SkillController::class, 'getByCategory'])->name('api.skills.by-category');
+    
+    // Questionnaires API
+    Route::get('/questionnaires', [QuestionnaireController::class, 'getActive'])->name('api.questionnaires.active');
+    Route::get('/questionnaires/niche/{niche}', [QuestionnaireController::class, 'getByNiche'])->name('api.questionnaires.by-niche');
+});
 
 // Firebase CRUD Routes
 Route::middleware('auth')->group(function () {
