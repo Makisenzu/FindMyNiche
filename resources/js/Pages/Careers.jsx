@@ -126,7 +126,6 @@ export default function Careers({ auth }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header="Careers Management"
         >
             <Head title="Careers" />
 

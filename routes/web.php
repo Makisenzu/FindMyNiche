@@ -8,6 +8,8 @@ use App\Http\Controllers\FirebaseTestController;
 use App\Http\Controllers\FirebaseCrudController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\QuestionnaireController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return Inertia::render('Auth/Login', [
@@ -18,9 +20,9 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -30,6 +32,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/careers', function () {
         return Inertia::render('Careers');
     })->name('careers');
+
+    // Users Management Routes
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
 
     // Skills Management Routes
     Route::get('/skills', [SkillController::class, 'index'])->name('skills.index');
