@@ -51,6 +51,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/questionnaires/{id}', [QuestionnaireController::class, 'update'])->name('questionnaires.update');
     Route::patch('/questionnaires/{id}', [QuestionnaireController::class, 'update'])->name('questionnaires.update.patch');
     Route::delete('/questionnaires/{id}', [QuestionnaireController::class, 'destroy'])->name('questionnaires.destroy');
+    
+    // Questions Management Routes
+    Route::get('/questions', [QuestionnaireController::class, 'questionsIndex'])->name('questions.index');
+    Route::get('/questions/{id}', [QuestionnaireController::class, 'showQuestion'])->name('questions.show');
+    Route::post('/questions', [QuestionnaireController::class, 'storeQuestion'])->name('questions.store');
+    Route::put('/questions/{id}', [QuestionnaireController::class, 'updateQuestion'])->name('questions.update');
+    Route::delete('/questions/{id}', [QuestionnaireController::class, 'destroyQuestion'])->name('questions.destroy');
 });
 
 Route::get('/test-firestore', [FirebaseTestController::class, 'testFirestore']);
@@ -66,6 +73,7 @@ Route::prefix('api')->group(function () {
     // Questionnaires API
     Route::get('/questionnaires', [QuestionnaireController::class, 'getActive'])->name('api.questionnaires.active');
     Route::get('/questionnaires/niche/{niche}', [QuestionnaireController::class, 'getByNiche'])->name('api.questionnaires.by-niche');
+    Route::get('/questions', [QuestionnaireController::class, 'getQuestions'])->name('api.questions');
 });
 
 // Firebase CRUD Routes

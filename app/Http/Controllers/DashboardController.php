@@ -18,8 +18,8 @@ class DashboardController extends Controller
     {
         // Fetch data from Firebase
         $skills = $this->firebase->readAll('skills');
-        $questionnaires = $this->firebase->readAll('questionnaires');
         $users = $this->firebase->readAll('users');
+        $questions = $this->firebase->readAll('questions');
 
         // Count total skills
         $totalSkills = count($skills);
@@ -40,38 +40,11 @@ class DashboardController extends Controller
         // Get top 5 categories
         $topCategories = array_slice($skillsByCategory, 0, 5, true);
 
-        // Count total questionnaires
-        $totalQuestionnaires = count($questionnaires);
+        // Count total questions from questions collection
+        $totalQuestions = count($questions);
 
-        // Count active questionnaires
-        $activeQuestionnaires = count(array_filter($questionnaires, function($q) {
-            return isset($q['active']) && $q['active'] === true;
-        }));
-
-        // Count total questions across all questionnaires
-        $totalQuestions = 0;
-        foreach ($questionnaires as $questionnaire) {
-            if (isset($questionnaire['questions']) && is_array($questionnaire['questions'])) {
-                $totalQuestions += count($questionnaire['questions']);
-            }
-        }
-
-        // Get questionnaires by niche
-        $questionnairesByNiche = [];
-        foreach ($questionnaires as $questionnaire) {
-            $niche = $questionnaire['niche'] ?? 'Uncategorized';
-            if (!isset($questionnairesByNiche[$niche])) {
-                $questionnairesByNiche[$niche] = 0;
-            }
-            $questionnairesByNiche[$niche]++;
-        }
-
-        // Sort niches by count (descending)
-        arsort($questionnairesByNiche);
-
-        // Recent activities (last 5 skills and questionnaires)
+        // Recent activities (last 5 skills)
         $recentSkills = array_slice(array_reverse($skills), 0, 5);
-        $recentQuestionnaires = array_slice(array_reverse($questionnaires), 0, 5);
 
         // User statistics
         $totalUsers = count($users);
@@ -102,8 +75,7 @@ class DashboardController extends Controller
         ];
 
         // Prepare trend data (simulate monthly growth for line chart)
-        // In a real app, you'd track creation dates
-        $monthlyData = $this->generateMonthlyTrend($skills, $questionnaires);
+        $monthlyData = $this->generateMonthlyTrend($skills, $questions);
 
         // Prepare user niche chart data (for pie chart)
         $nicheChartData = [
@@ -114,17 +86,13 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'stats' => [
                 'totalSkills' => $totalSkills,
-                'totalQuestionnaires' => $totalQuestionnaires,
-                'activeQuestionnaires' => $activeQuestionnaires,
                 'totalQuestions' => $totalQuestions,
                 'totalCategories' => count($skillsByCategory),
                 'totalUsers' => $totalUsers,
                 'usersWithNiche' => $usersWithNiche,
             ],
             'topCategories' => $topCategories,
-            'questionnairesByNiche' => $questionnairesByNiche,
             'recentSkills' => $recentSkills,
-            'recentQuestionnaires' => $recentQuestionnaires,
             'categoryChartData' => $categoryChartData,
             'monthlyTrend' => $monthlyData,
             'recentUsers' => $recentUsers,
@@ -133,12 +101,12 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function generateMonthlyTrend($skills, $questionnaires)
+    private function generateMonthlyTrend($skills, $questions)
     {
         // Get last 6 months
         $months = [];
         $skillsData = [];
-        $questionnairesData = [];
+        $questionsData = [];
         
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
@@ -147,13 +115,13 @@ class DashboardController extends Controller
             // For demo: simulate cumulative growth
             // In production, you'd filter by actual creation dates
             $skillsData[] = (int) (count($skills) * (1 - ($i * 0.15)));
-            $questionnairesData[] = (int) (count($questionnaires) * (1 - ($i * 0.15)));
+            $questionsData[] = (int) (count($questions) * (1 - ($i * 0.15)));
         }
         
         return [
             'labels' => $months,
             'skills' => $skillsData,
-            'questionnaires' => $questionnairesData,
+            'questions' => $questionsData,
         ];
     }
 }

@@ -5,7 +5,7 @@ import { Pie, Line } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-export default function Dashboard({ stats, topCategories, questionnairesByNiche, recentSkills, recentQuestionnaires, categoryChartData, monthlyTrend, recentUsers, usersByNiche, nicheChartData }) {
+export default function Dashboard({ stats, topCategories, recentSkills, categoryChartData, monthlyTrend, recentUsers, usersByNiche, nicheChartData }) {
     // Pie chart configuration
     const pieData = {
         labels: categoryChartData.labels,
@@ -80,8 +80,8 @@ export default function Dashboard({ stats, topCategories, questionnairesByNiche,
                 pointBackgroundColor: 'rgb(99, 102, 241)',
             },
             {
-                label: 'Questionnaires',
-                data: monthlyTrend.questionnaires,
+                label: 'Questions',
+                data: monthlyTrend.questions,
                 borderColor: 'rgb(16, 185, 129)',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 tension: 0.4,
@@ -142,7 +142,7 @@ export default function Dashboard({ stats, topCategories, questionnairesByNiche,
             <div className="py-6 sm:py-8 lg:py-12">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-8">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
                         {/* Total Users */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between">
@@ -186,49 +186,6 @@ export default function Dashboard({ stats, topCategories, questionnairesByNiche,
                             </div>
                         </div>
 
-                        {/* Total Questionnaires */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">Questionnaires</p>
-                                    <p className="mt-2 text-3xl font-bold text-gray-900">{stats.totalQuestionnaires}</p>
-                                </div>
-                                <div className="p-3 bg-green-50 rounded-lg">
-                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="mt-4">
-                                <Link 
-                                    href={route('questionnaires.index')} 
-                                    className="text-sm text-green-600 hover:text-green-700 font-medium"
-                                >
-                                    View all questionnaires →
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Active Questionnaires */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">Active</p>
-                                    <p className="mt-2 text-3xl font-bold text-gray-900">{stats.activeQuestionnaires}</p>
-                                </div>
-                                <div className="p-3 bg-teal-50 rounded-lg">
-                                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="mt-4">
-                                <p className="text-sm text-gray-500">
-                                    {stats.activeQuestionnaires} of {stats.totalQuestionnaires} active
-                                </p>
-                            </div>
-                        </div>
-
                         {/* Total Questions */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between">
@@ -243,9 +200,12 @@ export default function Dashboard({ stats, topCategories, questionnairesByNiche,
                                 </div>
                             </div>
                             <div className="mt-4">
-                                <p className="text-sm text-gray-500">
-                                    Across all questionnaires
-                                </p>
+                                <Link 
+                                    href={route('questions.index')} 
+                                    className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                                >
+                                    View all questions →
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -281,77 +241,41 @@ export default function Dashboard({ stats, topCategories, questionnairesByNiche,
                         </div>
                     </div>
 
-                    {/* Two Column Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        {/* Top Categories */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Top Skill Categories</h3>
-                                <span className="text-sm text-gray-500">{stats.totalCategories} total</span>
-                            </div>
-                            <div className="space-y-4">
-                                {Object.entries(topCategories).length > 0 ? (
-                                    Object.entries(topCategories).map(([category, count], index) => (
-                                        <div key={category} className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3 flex-1">
-                                                <span className="flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
-                                                    {index + 1}
-                                                </span>
-                                                <span className="text-sm font-medium text-gray-900">{category}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-24 bg-gray-200 rounded-full h-2">
-                                                    <div 
-                                                        className="bg-indigo-600 h-2 rounded-full" 
-                                                        style={{ width: `${(count / stats.totalSkills) * 100}%` }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-sm font-semibold text-gray-600 w-8 text-right">{count}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-gray-500 text-center py-8">No categories yet</p>
-                                )}
-                            </div>
+                    {/* Top Categories */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900">Top Skill Categories</h3>
+                            <span className="text-sm text-gray-500">{stats.totalCategories} total</span>
                         </div>
-
-                        {/* Questionnaires by Niche */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Questionnaires by Niche</h3>
-                                <span className="text-sm text-gray-500">{Object.keys(questionnairesByNiche).length} niches</span>
-                            </div>
-                            <div className="space-y-4">
-                                {Object.entries(questionnairesByNiche).length > 0 ? (
-                                    Object.entries(questionnairesByNiche).slice(0, 5).map(([niche, count], index) => (
-                                        <div key={niche} className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3 flex-1">
-                                                <span className="flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
-                                                    {index + 1}
-                                                </span>
-                                                <span className="text-sm font-medium text-gray-900 truncate">{niche}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-24 bg-gray-200 rounded-full h-2">
-                                                    <div 
-                                                        className="bg-green-600 h-2 rounded-full" 
-                                                        style={{ width: `${(count / stats.totalQuestionnaires) * 100}%` }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-sm font-semibold text-gray-600 w-8 text-right">{count}</span>
-                                            </div>
+                        <div className="space-y-4">
+                            {Object.entries(topCategories).length > 0 ? (
+                                Object.entries(topCategories).map(([category, count], index) => (
+                                    <div key={category} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <span className="flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">
+                                                {index + 1}
+                                            </span>
+                                            <span className="text-sm font-medium text-gray-900">{category}</span>
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-gray-500 text-center py-8">No questionnaires yet</p>
-                                )}
-                            </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-24 bg-gray-200 rounded-full h-2">
+                                                <div 
+                                                    className="bg-indigo-600 h-2 rounded-full" 
+                                                    style={{ width: `${(count / stats.totalSkills) * 100}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className="text-sm font-semibold text-gray-600 w-8 text-right">{count}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-500 text-center py-8">No categories yet</p>
+                            )}
                         </div>
                     </div>
 
                     {/* Recent Activity */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                         {/* Recent Skills */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <div className="flex items-center justify-between mb-6">
@@ -380,47 +304,6 @@ export default function Dashboard({ stats, topCategories, questionnairesByNiche,
                                     ))
                                 ) : (
                                     <p className="text-sm text-gray-500 text-center py-8">No skills added yet</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Recent Questionnaires */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Recent Questionnaires</h3>
-                                <Link 
-                                    href={route('questionnaires.index')} 
-                                    className="text-sm text-green-600 hover:text-green-700 font-medium"
-                                >
-                                    View all
-                                </Link>
-                            </div>
-                            <div className="space-y-3">
-                                {recentQuestionnaires && recentQuestionnaires.length > 0 ? (
-                                    recentQuestionnaires.slice(0, 5).map((questionnaire) => (
-                                        <div key={questionnaire._id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                                            <div className="flex-shrink-0 w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{questionnaire.title}</p>
-                                                    {questionnaire.active && (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                            Active
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-0.5">
-                                                    {questionnaire.niche} • {questionnaire.questions?.length || 0} questions
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-gray-500 text-center py-8">No questionnaires created yet</p>
                                 )}
                             </div>
                         </div>

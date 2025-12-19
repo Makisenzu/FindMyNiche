@@ -151,4 +151,131 @@ class QuestionnaireController extends Controller
             'data' => $questionnaires
         ]);
     }
+
+    public function getQuestions()
+    {
+        $questions = $this->firebase->readAll('questions');
+        
+        // Filter out empty questions and sort by id
+        $filteredQuestions = array_filter($questions, function($q) {
+            return !empty($q['question']);
+        });
+        
+        // Sort by id
+        usort($filteredQuestions, function($a, $b) {
+            return ($a['id'] ?? 0) - ($b['id'] ?? 0);
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $filteredQuestions
+        ]);
+    }
+
+    public function questionsIndex(Request $request)
+    {
+        $perPage = 20;
+        $page = $request->input('page', 1);
+        $search = $request->input('search', '');
+        
+        $allQuestions = $this->firebase->readAll('questions');
+        
+        // Apply search filter (don't filter out empty questions here, let them show)
+        $filtered = array_filter($allQuestions, function($q) use ($search) {
+            // If searching, only match non-empty questions that contain search term
+            if (!empty($search)) {
+                return !empty($q['question']) && stripos($q['question'], $search) !== false;
+            }
+            // If not searching, show all questions (including empty ones)
+            return true;
+        });
+        
+        // Sort by id
+        usort($filtered, function($a, $b) {
+            return ($a['id'] ?? 0) - ($b['id'] ?? 0);
+        });
+        
+        // Paginate
+        $total = count($filtered);
+        $totalQuestions = count($allQuestions); // Total count of all questions
+        $lastPage = ceil($total / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $paginated = array_slice($filtered, $offset, $perPage);
+        
+        return Inertia::render('Questions/Index', [
+            'questions' => array_values($paginated),
+            'totalQuestions' => $totalQuestions,
+            'pagination' => [
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => (int) $page,
+                'last_page' => (int) $lastPage,
+                'from' => $offset + 1,
+                'to' => min($offset + $perPage, $total),
+            ],
+            'filters' => [
+                'search' => $search,
+            ]
+        ]);
+    }
+
+    public function storeQuestion(Request $request)
+    {
+        $validated = $request->validate([
+            'question' => 'required|string',
+            'id' => 'required|integer',
+        ]);
+
+        $validated['created_at'] = now()->toIso8601String();
+        $validated['updated_at'] = now()->toIso8601String();
+
+        $result = $this->firebase->create('questions', $validated);
+
+        if ($result) {
+            return back()->with('success', 'Question created successfully');
+        }
+
+        return back()->with('error', 'Failed to create question');
+    }
+
+    public function updateQuestion(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'question' => 'required|string',
+            'id' => 'required|integer',
+        ]);
+
+        $validated['updated_at'] = now()->toIso8601String();
+
+        $result = $this->firebase->update('questions', $id, $validated);
+
+        if ($result) {
+            return back()->with('success', 'Question updated successfully');
+        }
+
+        return back()->with('error', 'Failed to update question');
+    }
+
+    public function destroyQuestion(string $id)
+    {
+        $result = $this->firebase->delete('questions', $id);
+
+        if ($result) {
+            return back()->with('success', 'Question deleted successfully');
+        }
+
+        return back()->with('error', 'Failed to delete question');
+    }
+
+    public function showQuestion(string $id)
+    {
+        $question = $this->firebase->read('questions', $id);
+        
+        if (!$question) {
+            return response()->json(['error' => 'Question not found'], 404);
+        }
+
+        $question['_id'] = $id;
+        return response()->json($question);
+    }
 }
