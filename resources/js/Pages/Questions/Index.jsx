@@ -6,7 +6,7 @@ export default function Index({ questions, pagination, filters, totalQuestions }
     const [showModal, setShowModal] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState(null);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'table'
+    const [viewMode, setViewMode] = useState('grid');
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         id: '',
@@ -15,7 +15,6 @@ export default function Index({ questions, pagination, filters, totalQuestions }
 
     const openCreateModal = () => {
         reset();
-        // Find the next available ID
         const maxId = questions.reduce((max, q) => Math.max(max, q.id || 0), 0);
         setData('id', maxId + 1);
         setEditingQuestion(null);

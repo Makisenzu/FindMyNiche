@@ -24,8 +24,7 @@ class SkillController extends Controller
         $category = $request->input('category', '');
         
         $allSkills = $this->firebase->readAll($this->collection);
-        
-        // Filter skills
+
         $filteredSkills = array_filter($allSkills, function($skill) use ($search, $category) {
             $matchesSearch = empty($search) || 
                 stripos($skill['name'], $search) !== false || 
@@ -36,11 +35,9 @@ class SkillController extends Controller
             return $matchesSearch && $matchesCategory;
         });
         
-        // Get unique categories
         $categories = array_unique(array_column($allSkills, 'category'));
         sort($categories);
-        
-        // Paginate
+
         $total = count($filteredSkills);
         $lastPage = ceil($total / $perPage);
         $offset = ($page - 1) * $perPage;

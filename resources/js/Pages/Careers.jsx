@@ -89,7 +89,6 @@ export default function Careers({ auth }) {
             setShowQuestionModal(false);
             setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0 });
             
-            // Refresh the selected career
             const response = await axios.get(`/firebase/careers/${selectedCareer._id}`);
             setSelectedCareer({ ...response.data.data, _id: selectedCareer._id });
             fetchCareers();

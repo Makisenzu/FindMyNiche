@@ -15,9 +15,6 @@ class FirebaseCrudController extends Controller
         $this->firebase = $firebase;
     }
 
-    /**
-     * Display all documents from a collection
-     */
     public function index(Request $request, string $collection)
     {
         $data = $this->firebase->readAll($collection);
@@ -29,14 +26,10 @@ class FirebaseCrudController extends Controller
         ]);
     }
 
-    /**
-     * Store a new document
-     */
     public function store(Request $request, string $collection)
     {
         $data = $request->all();
-        
-        // Optional: specify custom document ID
+
         $documentId = $request->input('_id') ?? null;
         if ($documentId) {
             unset($data['_id']);
@@ -58,9 +51,6 @@ class FirebaseCrudController extends Controller
         ], 500);
     }
 
-    /**
-     * Display a specific document
-     */
     public function show(string $collection, string $id)
     {
         $data = $this->firebase->read($collection, $id);
@@ -78,9 +68,6 @@ class FirebaseCrudController extends Controller
         ], 404);
     }
 
-    /**
-     * Update a document
-     */
     public function update(Request $request, string $collection, string $id)
     {
         $data = $request->all();
@@ -100,9 +87,6 @@ class FirebaseCrudController extends Controller
         ], 500);
     }
 
-    /**
-     * Delete a document
-     */
     public function destroy(string $collection, string $id)
     {
         $result = $this->firebase->delete($collection, $id);
@@ -120,9 +104,6 @@ class FirebaseCrudController extends Controller
         ], 500);
     }
 
-    /**
-     * Query documents with filters
-     */
     public function query(Request $request, string $collection)
     {
         $where = $request->input('where', []);

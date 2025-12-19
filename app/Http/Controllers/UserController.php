@@ -17,10 +17,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        // Fetch all users from Firebase
         $users = $this->firebase->readAll('users');
-
-        // Apply search filter
         $search = $request->input('search', '');
         if ($search) {
             $users = array_filter($users, function($user) use ($search) {
@@ -30,11 +27,7 @@ class UserController extends Controller
                        (isset($user['niche']) && stripos($user['niche'], $search) !== false);
             });
         }
-
-        // Sort by creation date or latest first
         $users = array_reverse($users);
-
-        // Pagination
         $perPage = 15;
         $page = $request->input('page', 1);
         $total = count($users);

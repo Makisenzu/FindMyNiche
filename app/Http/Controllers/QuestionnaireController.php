@@ -23,8 +23,7 @@ class QuestionnaireController extends Controller
         $search = $request->input('search', '');
         
         $allQuestionnaires = $this->firebase->readAll($this->collection);
-        
-        // Filter questionnaires
+
         $filtered = array_filter($allQuestionnaires, function($q) use ($search) {
             return empty($search) || 
                 stripos($q['title'], $search) !== false || 
@@ -32,7 +31,6 @@ class QuestionnaireController extends Controller
                 stripos($q['description'] ?? '', $search) !== false;
         });
         
-        // Paginate
         $total = count($filtered);
         $lastPage = ceil($total / $perPage);
         $offset = ($page - 1) * $perPage;
@@ -156,12 +154,10 @@ class QuestionnaireController extends Controller
     {
         $questions = $this->firebase->readAll('questions');
         
-        // Filter out empty questions and sort by id
         $filteredQuestions = array_filter($questions, function($q) {
             return !empty($q['question']);
         });
         
-        // Sort by id
         usort($filteredQuestions, function($a, $b) {
             return ($a['id'] ?? 0) - ($b['id'] ?? 0);
         });
@@ -179,25 +175,20 @@ class QuestionnaireController extends Controller
         $search = $request->input('search', '');
         
         $allQuestions = $this->firebase->readAll('questions');
-        
-        // Apply search filter (don't filter out empty questions here, let them show)
+
         $filtered = array_filter($allQuestions, function($q) use ($search) {
-            // If searching, only match non-empty questions that contain search term
             if (!empty($search)) {
                 return !empty($q['question']) && stripos($q['question'], $search) !== false;
             }
-            // If not searching, show all questions (including empty ones)
             return true;
         });
         
-        // Sort by id
         usort($filtered, function($a, $b) {
             return ($a['id'] ?? 0) - ($b['id'] ?? 0);
         });
-        
-        // Paginate
+
         $total = count($filtered);
-        $totalQuestions = count($allQuestions); // Total count of all questions
+        $totalQuestions = count($allQuestions);
         $lastPage = ceil($total / $perPage);
         $offset = ($page - 1) * $perPage;
         $paginated = array_slice($filtered, $offset, $perPage);
