@@ -168,24 +168,216 @@ class QuestionnaireController extends Controller
         ]);
     }
 
+    public function getSubCategories(Request $request)
+    {
+        $mainCategory = $request->input('main_category', '');
+        
+        $allQuestions = $this->firebase->readAll('questions');
+        
+        $subCategories = [];
+        foreach ($allQuestions as $question) {
+            if (isset($question['main_category']) && 
+                isset($question['sub_category']) && 
+                ($mainCategory === '' || $question['main_category'] === $mainCategory)) {
+                $subCategories[$question['sub_category']] = true;
+            }
+        }
+        
+        $subCategories = array_keys($subCategories);
+        sort($subCategories);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subCategories
+        ]);
+    }
+
+    /**
+     * Create a new main category
+     */
+    public function createMainCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+    
+        // Check if main category already exists
+        $allQuestions = $this->firebase->readAll('questions');
+        $existingMainCategories = [];
+        
+        foreach ($allQuestions as $question) {
+            if (isset($question['main_category'])) {
+                $existingMainCategories[] = $question['main_category'];
+            }
+        }
+        
+        if (in_array($validated['name'], $existingMainCategories)) {
+            // Return back with error for Inertia
+            return back()->withErrors([
+                'name' => 'Main category already exists'
+            ]);
+        }
+    
+        // Return back with success message
+        return back()->with('success', 'Main category can be used')->with('category_data', [
+            'name' => $validated['name']
+        ]);
+    }
+
+    /**
+     * Create a new sub category
+     */
+    public function createSubCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'main_category' => 'required|string|max:255',
+        ]);
+    
+        // Check if sub category already exists under this main category
+        $allQuestions = $this->firebase->readAll('questions');
+        $existingSubCategories = [];
+        
+        foreach ($allQuestions as $question) {
+            if (isset($question['main_category']) && 
+                $question['main_category'] === $validated['main_category'] &&
+                isset($question['sub_category'])) {
+                $existingSubCategories[] = $question['sub_category'];
+            }
+        }
+        
+        if (in_array($validated['name'], $existingSubCategories)) {
+            // Return back with error for Inertia
+            return back()->withErrors([
+                'name' => 'Sub category already exists under this main category'
+            ]);
+        }
+    
+        // Return back with success message
+        return back()->with('success', 'Sub category can be used')->with('category_data', [
+            'name' => $validated['name'],
+            'main_category' => $validated['main_category']
+        ]);
+    }
+
+    /**
+     * Get all main categories
+     */
+    public function getAllMainCategories()
+    {
+        $allQuestions = $this->firebase->readAll('questions');
+        
+        $mainCategories = [];
+        foreach ($allQuestions as $question) {
+            if (isset($question['main_category'])) {
+                $mainCategories[$question['main_category']] = true;
+            }
+        }
+        
+        $mainCategories = array_keys($mainCategories);
+        sort($mainCategories);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $mainCategories
+        ]);
+    }
+
+    /**
+     * Get all sub categories (optionally filtered by main category)
+     */
+    public function getAllSubCategories(Request $request)
+    {
+        $mainCategory = $request->input('main_category', '');
+        
+        $allQuestions = $this->firebase->readAll('questions');
+        
+        $subCategories = [];
+        foreach ($allQuestions as $question) {
+            if (isset($question['sub_category'])) {
+                if (empty($mainCategory) || 
+                    (isset($question['main_category']) && $question['main_category'] === $mainCategory)) {
+                    $subCategories[$question['sub_category']] = true;
+                }
+            }
+        }
+        
+        $subCategories = array_keys($subCategories);
+        sort($subCategories);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $subCategories
+        ]);
+    }
+
     public function questionsIndex(Request $request)
     {
         $perPage = 20;
         $page = $request->input('page', 1);
         $search = $request->input('search', '');
+        $mainCategory = $request->input('main_category', '');
+        $subCategory = $request->input('sub_category', '');
         
         $allQuestions = $this->firebase->readAll('questions');
 
-        $filtered = array_filter($allQuestions, function($q) use ($search) {
-            if (!empty($search)) {
-                return !empty($q['question']) && stripos($q['question'], $search) !== false;
+        $filtered = array_filter($allQuestions, function($q) use ($search, $mainCategory, $subCategory) {
+            $matches = !empty($q['question']);
+            
+            if ($search) {
+                $matches = $matches && stripos($q['question'], $search) !== false;
             }
-            return true;
+            
+            if ($mainCategory) {
+                $matches = $matches && isset($q['main_category']) && $q['main_category'] === $mainCategory;
+            }
+            
+            if ($subCategory) {
+                $matches = $matches && isset($q['sub_category']) && $q['sub_category'] === $subCategory;
+            }
+            
+            return $matches;
         });
         
         usort($filtered, function($a, $b) {
             return ($a['id'] ?? 0) - ($b['id'] ?? 0);
         });
+
+        // Get unique categories for filters
+        $mainCategories = [];
+        $subCategories = [];
+        $categorizedSubCategories = [];
+        
+        foreach ($allQuestions as $question) {
+            if (isset($question['main_category'])) {
+                $mainCategories[$question['main_category']] = true;
+                
+                // Build categorized sub categories
+                if (isset($question['sub_category'])) {
+                    $mainCat = $question['main_category'];
+                    $subCat = $question['sub_category'];
+                    
+                    if (!isset($categorizedSubCategories[$mainCat])) {
+                        $categorizedSubCategories[$mainCat] = [];
+                    }
+                    $categorizedSubCategories[$mainCat][$subCat] = true;
+                }
+            }
+            if (isset($question['sub_category'])) {
+                $subCategories[$question['sub_category']] = true;
+            }
+        }
+        
+        $mainCategories = array_keys($mainCategories);
+        sort($mainCategories);
+        $subCategories = array_keys($subCategories);
+        sort($subCategories);
+        
+        // Convert categorized sub categories to arrays
+        foreach ($categorizedSubCategories as &$subCats) {
+            $subCats = array_keys($subCats);
+            sort($subCats);
+        }
 
         $total = count($filtered);
         $totalQuestions = count($allQuestions);
@@ -196,6 +388,9 @@ class QuestionnaireController extends Controller
         return Inertia::render('Questions/Index', [
             'questions' => array_values($paginated),
             'totalQuestions' => $totalQuestions,
+            'mainCategories' => $mainCategories,
+            'subCategories' => $subCategories,
+            'categorizedSubCategories' => $categorizedSubCategories,
             'pagination' => [
                 'total' => $total,
                 'per_page' => $perPage,
@@ -206,6 +401,8 @@ class QuestionnaireController extends Controller
             ],
             'filters' => [
                 'search' => $search,
+                'main_category' => $mainCategory,
+                'sub_category' => $subCategory,
             ]
         ]);
     }
@@ -214,8 +411,22 @@ class QuestionnaireController extends Controller
     {
         $validated = $request->validate([
             'question' => 'required|string',
-            'id' => 'required|integer',
+            'main_category' => 'nullable|string|max:255',
+            'sub_category' => 'nullable|string|max:255',
         ]);
+
+        // Check for duplicate question ID
+        $allQuestions = $this->firebase->readAll('questions');
+        $existingIds = [];
+        foreach ($allQuestions as $q) {
+            if (isset($q['id'])) {
+                $existingIds[] = $q['id'];
+            }
+        }
+        
+        // if (in_array($validated['id'], $existingIds)) {
+        //     return back()->withErrors(['id' => 'Question ID already exists'])->withInput();
+        // }
 
         $validated['created_at'] = now()->toIso8601String();
         $validated['updated_at'] = now()->toIso8601String();
@@ -234,7 +445,30 @@ class QuestionnaireController extends Controller
         $validated = $request->validate([
             'question' => 'required|string',
             'id' => 'required|integer',
+            'main_category' => 'nullable|string|max:255',
+            'sub_category' => 'nullable|string|max:255',
         ]);
+
+        // Get existing question to check ID
+        $existingQuestion = $this->firebase->read('questions', $id);
+        if (!$existingQuestion) {
+            return back()->with('error', 'Question not found');
+        }
+
+        // If ID is being changed, check for duplicates
+        if ($validated['id'] != $existingQuestion['id']) {
+            $allQuestions = $this->firebase->readAll('questions');
+            $existingIds = [];
+            foreach ($allQuestions as $q) {
+                if (isset($q['id'])) {
+                    $existingIds[] = $q['id'];
+                }
+            }
+            
+            if (in_array($validated['id'], $existingIds)) {
+                return back()->withErrors(['id' => 'Question ID already exists'])->withInput();
+            }
+        }
 
         $validated['updated_at'] = now()->toIso8601String();
 
@@ -268,5 +502,42 @@ class QuestionnaireController extends Controller
 
         $question['_id'] = $id;
         return response()->json($question);
+    }
+
+    public function getQuestionStats()
+    {
+        $questions = $this->firebase->readAll('questions');
+        
+        $stats = [
+            'total' => count($questions),
+            'by_main_category' => [],
+            'by_sub_category' => []
+        ];
+        
+        foreach ($questions as $question) {
+            if (isset($question['main_category'])) {
+                $mainCat = $question['main_category'];
+                if (!isset($stats['by_main_category'][$mainCat])) {
+                    $stats['by_main_category'][$mainCat] = 0;
+                }
+                $stats['by_main_category'][$mainCat]++;
+            }
+            
+            if (isset($question['sub_category'])) {
+                $subCat = $question['sub_category'];
+                if (!isset($stats['by_sub_category'][$subCat])) {
+                    $stats['by_sub_category'][$subCat] = 0;
+                }
+                $stats['by_sub_category'][$subCat]++;
+            }
+        }
+        
+        arsort($stats['by_main_category']);
+        arsort($stats['by_sub_category']);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $stats
+        ]);
     }
 }

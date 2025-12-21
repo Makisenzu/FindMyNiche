@@ -33,18 +33,15 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Careers');
     })->name('careers');
 
-    // Users Management Routes
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
 
-    // Skills Management Routes
     Route::get('/skills', [SkillController::class, 'index'])->name('skills.index');
     Route::get('/skills/{id}', [SkillController::class, 'show'])->name('skills.show');
     Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
     Route::put('/skills/{id}', [SkillController::class, 'update'])->name('skills.update');
     Route::delete('/skills/{id}', [SkillController::class, 'destroy'])->name('skills.destroy');
     
-    // Questionnaires Management Routes
     Route::get('/questionnaires', [QuestionnaireController::class, 'index'])->name('questionnaires.index');
     Route::get('/questionnaires/{id}', [QuestionnaireController::class, 'show'])->name('questionnaires.show');
     Route::post('/questionnaires', [QuestionnaireController::class, 'store'])->name('questionnaires.store');
@@ -52,31 +49,36 @@ Route::middleware('auth')->group(function () {
     Route::patch('/questionnaires/{id}', [QuestionnaireController::class, 'update'])->name('questionnaires.update.patch');
     Route::delete('/questionnaires/{id}', [QuestionnaireController::class, 'destroy'])->name('questionnaires.destroy');
     
-    // Questions Management Routes
     Route::get('/questions', [QuestionnaireController::class, 'questionsIndex'])->name('questions.index');
     Route::get('/questions/{id}', [QuestionnaireController::class, 'showQuestion'])->name('questions.show');
     Route::post('/questions', [QuestionnaireController::class, 'storeQuestion'])->name('questions.store');
     Route::put('/questions/{id}', [QuestionnaireController::class, 'updateQuestion'])->name('questions.update');
     Route::delete('/questions/{id}', [QuestionnaireController::class, 'destroyQuestion'])->name('questions.destroy');
+    Route::get('/questions/stats', [QuestionnaireController::class, 'getQuestionStats'])->name('questions.stats');
+    Route::get('/questions/sub-categories', [QuestionnaireController::class, 'getSubCategories'])->name('questions.sub-categories');
+    Route::get('/questions/main-categories/all', [QuestionnaireController::class, 'getAllMainCategories'])->name('questions.main-categories.all');
+    Route::get('/questions/sub-categories/all', [QuestionnaireController::class, 'getAllSubCategories'])->name('questions.sub-categories.all');
+    Route::post('/questions/main-categories', [QuestionnaireController::class, 'createMainCategory'])->name('questions.main-categories.create');
+    Route::post('/questions/sub-categories', [QuestionnaireController::class, 'createSubCategory'])->name('questions.sub-categories.create');
+
+    Route::get('/questionnaires/niche/{niche}', [QuestionnaireController::class, 'getByNiche'])->name('questionnaires.by-niche');
+    Route::get('/questionnaires/active', [QuestionnaireController::class, 'getActive'])->name('questionnaires.active');
+    Route::get('/questions/list', [QuestionnaireController::class, 'getQuestions'])->name('questions.list');
 });
 
 Route::get('/test-firestore', [FirebaseTestController::class, 'testFirestore']);
 Route::get('/firebase-data/{collection}', [FirebaseTestController::class, 'getData']);
 
-// API Routes for mobile app
 Route::prefix('api')->group(function () {
-    // Skills API
     Route::get('/skills', [SkillController::class, 'index'])->name('api.skills.index');
     Route::get('/skills/categories', [SkillController::class, 'getCategories'])->name('api.skills.categories');
     Route::get('/skills/category/{category}', [SkillController::class, 'getByCategory'])->name('api.skills.by-category');
     
-    // Questionnaires API
     Route::get('/questionnaires', [QuestionnaireController::class, 'getActive'])->name('api.questionnaires.active');
     Route::get('/questionnaires/niche/{niche}', [QuestionnaireController::class, 'getByNiche'])->name('api.questionnaires.by-niche');
     Route::get('/questions', [QuestionnaireController::class, 'getQuestions'])->name('api.questions');
 });
 
-// Firebase CRUD Routes
 Route::middleware('auth')->group(function () {
     Route::get('/firebase/{collection}', [FirebaseCrudController::class, 'index']);
     Route::post('/firebase/{collection}', [FirebaseCrudController::class, 'store']);
