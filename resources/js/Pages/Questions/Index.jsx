@@ -587,8 +587,8 @@ export default function Index({
                                     <div className="p-5">
                                         {/* Question ID Badge */}
                                         <div className="flex items-center justify-between mb-3">
-                                            <div className="inline-flex items-center px-3 py-1 rounded-full bg-black text-white text-xs font-bold">
-                                                Q #{question.id}
+                                            <div className="inline-flex items-center px-3 py-1 rounded-full bg-white text-white text-xs font-bold">
+                                                {/* Q #{question.id} */}
                                             </div>
                                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
@@ -652,9 +652,6 @@ export default function Index({
                                     <thead className="bg-gray-50">
                                         <tr>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                ID
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Question
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -671,11 +668,6 @@ export default function Index({
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {questions.map((question) => (
                                             <tr key={question._id} className="hover:bg-gray-50 transition">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                        #{question.id}
-                                                    </span>
-                                                </td>
                                                 <td className="px-6 py-4">
                                                     <p className="text-sm text-gray-900 line-clamp-2">
                                                         {question.question || <span className="text-gray-400 italic">Empty question</span>}
