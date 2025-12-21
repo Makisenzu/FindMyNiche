@@ -325,7 +325,7 @@ export default function Dashboard({ stats, topCategories, recentSkills, category
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Niche</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skills</th>
+                                        {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skills</th> */}
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     </tr>
                                 </thead>
@@ -357,11 +357,11 @@ export default function Dashboard({ stats, topCategories, recentSkills, category
                                                         <span className="text-sm text-gray-400">Not assigned</span>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-4 whitespace-nowrap">
+                                                {/* <td className="px-4 py-4 whitespace-nowrap">
                                                     <p className="text-sm text-gray-600">
                                                         {user.selectedSkills ? user.selectedSkills.length : 0} skills
                                                     </p>
-                                                </td>
+                                                </td> */}
                                                 <td className="px-4 py-4 whitespace-nowrap">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                                         user.niche 
