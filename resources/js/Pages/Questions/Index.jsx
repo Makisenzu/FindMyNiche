@@ -21,7 +21,6 @@ export default function Index({
     const [filteredSubCategories, setFilteredSubCategories] = useState([]);
     const [loadingSubCategories, setLoadingSubCategories] = useState(false);
     
-    // New states for creating categories
     const [showNewMainCategoryModal, setShowNewMainCategoryModal] = useState(false);
     const [showNewSubCategoryModal, setShowNewSubCategoryModal] = useState(false);
     const [newMainCategory, setNewMainCategory] = useState('');
@@ -41,7 +40,6 @@ export default function Index({
         sub_category: '',
     });
 
-    // Fetch sub-categories based on selected main category
     const fetchSubCategories = useCallback(async (mainCategory) => {
         if (!mainCategory) {
             setFilteredSubCategories([]);
@@ -63,7 +61,6 @@ export default function Index({
         }
     }, []);
 
-    // Initialize filtered sub-categories based on initial main category
     useEffect(() => {
         if (selectedMainCategory && categorizedSubCategories?.[selectedMainCategory]) {
             setFilteredSubCategories(categorizedSubCategories[selectedMainCategory]);
@@ -74,7 +71,7 @@ export default function Index({
 
     const handleMainCategoryChange = (value) => {
         setSelectedMainCategory(value);
-        setSelectedSubCategory(''); // Reset sub-category when main category changes
+        setSelectedSubCategory('');
         
         if (value && categorizedSubCategories?.[value]) {
             setFilteredSubCategories(categorizedSubCategories[value]);
@@ -164,48 +161,40 @@ export default function Index({
             return;
         }
         
-        // Check locally first
         if (localMainCategories.includes(newMainCategory)) {
             alert('This main category already exists');
             return;
         }
         
-        // Use router.post for Inertia request
         router.post(route('questions.main-categories.create'), {
             name: newMainCategory
         }, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: (page) => {
-                // Check for errors in the response
                 if (page.props.errors && page.props.errors.name) {
                     alert(page.props.errors.name);
                     return;
                 }
-                
-                // Check if we have category data in flash session
+
                 if (page.props.flash && page.props.flash.category_data) {
                     const categoryData = page.props.flash.category_data;
                     
-                    // Update local state
                     const updatedMainCategories = [...localMainCategories, categoryData.name].sort();
                     setLocalMainCategories(updatedMainCategories);
                     
-                    // Update categorized sub categories
                     const updatedCategorizedSubCategories = { ...localCategorizedSubCategories };
                     if (!updatedCategorizedSubCategories[categoryData.name]) {
                         updatedCategorizedSubCategories[categoryData.name] = [];
                     }
                     setLocalCategorizedSubCategories(updatedCategorizedSubCategories);
                     
-                    // Update form
                     setData('main_category', categoryData.name);
                     setNewMainCategory('');
                     setShowNewMainCategoryModal(false);
                     
                     alert(`Main category "${categoryData.name}" added successfully!`);
                 } else {
-                    // Fallback: update with the original input
                     const updatedMainCategories = [...localMainCategories, newMainCategory].sort();
                     setLocalMainCategories(updatedMainCategories);
                     
@@ -223,7 +212,6 @@ export default function Index({
                 }
             },
             onError: (errors) => {
-                // Handle validation errors
                 if (errors.name) {
                     alert(errors.name);
                 } else if (errors.message) {
@@ -246,14 +234,12 @@ export default function Index({
             return;
         }
         
-        // Check locally first
         const existingSubCats = localCategorizedSubCategories[subCategoryMainCategory] || [];
         if (existingSubCats.includes(newSubCategory)) {
             alert('This sub category already exists under the selected main category');
             return;
         }
-        
-        // Use router.post for Inertia request
+
         router.post(route('questions.sub-categories.create'), {
             name: newSubCategory,
             main_category: subCategoryMainCategory
@@ -261,7 +247,6 @@ export default function Index({
             preserveScroll: true,
             preserveState: true,
             onSuccess: (page) => {
-                // Check for errors in the response
                 if (page.props.errors) {
                     if (page.props.errors.name) {
                         alert(page.props.errors.name);
@@ -273,11 +258,9 @@ export default function Index({
                     }
                 }
                 
-                // Check if we have category data in flash session
                 if (page.props.flash && page.props.flash.category_data) {
                     const categoryData = page.props.flash.category_data;
-                    
-                    // Update local categorized sub categories
+
                     const updatedCategorizedSubCategories = { ...localCategorizedSubCategories };
                     if (!updatedCategorizedSubCategories[categoryData.main_category]) {
                         updatedCategorizedSubCategories[categoryData.main_category] = [];
@@ -288,14 +271,11 @@ export default function Index({
                     }
                     setLocalCategorizedSubCategories(updatedCategorizedSubCategories);
                     
-                    // Update all sub categories
                     const updatedSubCategories = [...localSubCategories, categoryData.name].sort();
                     setLocalSubCategories(updatedSubCategories);
                     
-                    // Update filtered sub categories
                     setFilteredSubCategories(updatedCategorizedSubCategories[categoryData.main_category] || []);
-                    
-                    // Update form
+
                     setData('main_category', categoryData.main_category);
                     setData('sub_category', categoryData.name);
                     setNewSubCategory('');
@@ -304,7 +284,6 @@ export default function Index({
                     
                     alert(`Sub category "${categoryData.name}" added successfully under "${categoryData.main_category}"!`);
                 } else {
-                    // Fallback: update with the original input
                     const updatedCategorizedSubCategories = { ...localCategorizedSubCategories };
                     if (!updatedCategorizedSubCategories[subCategoryMainCategory]) {
                         updatedCategorizedSubCategories[subCategoryMainCategory] = [];
@@ -330,7 +309,6 @@ export default function Index({
                 }
             },
             onError: (errors) => {
-                // Handle validation errors
                 if (errors.name) {
                     alert(errors.name);
                 } else if (errors.main_category) {
@@ -375,7 +353,6 @@ export default function Index({
     }, [searchTerm, selectedMainCategory, selectedSubCategory]);
 
     useEffect(() => {
-        // Fetch category stats
         fetch(route('questions.stats'))
             .then(res => res.json())
             .then(data => {
@@ -1097,9 +1074,6 @@ export default function Index({
                                             placeholder="e.g., Realistic, Healthcare, Teamwork"
                                             className="block w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition"
                                         />
-                                        <p className="mt-1.5 text-xs text-gray-500">
-                                            Sub categories are specific groups under main categories
-                                        </p>
                                     </div>
                                     
                                     <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">

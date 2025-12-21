@@ -192,16 +192,12 @@ class QuestionnaireController extends Controller
         ]);
     }
 
-    /**
-     * Create a new main category
-     */
     public function createMainCategory(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
         ]);
     
-        // Check if main category already exists
         $allQuestions = $this->firebase->readAll('questions');
         $existingMainCategories = [];
         
@@ -212,21 +208,16 @@ class QuestionnaireController extends Controller
         }
         
         if (in_array($validated['name'], $existingMainCategories)) {
-            // Return back with error for Inertia
             return back()->withErrors([
                 'name' => 'Main category already exists'
             ]);
         }
     
-        // Return back with success message
         return back()->with('success', 'Main category can be used')->with('category_data', [
             'name' => $validated['name']
         ]);
     }
 
-    /**
-     * Create a new sub category
-     */
     public function createSubCategory(Request $request)
     {
         $validated = $request->validate([
@@ -234,7 +225,6 @@ class QuestionnaireController extends Controller
             'main_category' => 'required|string|max:255',
         ]);
     
-        // Check if sub category already exists under this main category
         $allQuestions = $this->firebase->readAll('questions');
         $existingSubCategories = [];
         
@@ -247,22 +237,17 @@ class QuestionnaireController extends Controller
         }
         
         if (in_array($validated['name'], $existingSubCategories)) {
-            // Return back with error for Inertia
             return back()->withErrors([
                 'name' => 'Sub category already exists under this main category'
             ]);
         }
-    
-        // Return back with success message
+
         return back()->with('success', 'Sub category can be used')->with('category_data', [
             'name' => $validated['name'],
             'main_category' => $validated['main_category']
         ]);
     }
 
-    /**
-     * Get all main categories
-     */
     public function getAllMainCategories()
     {
         $allQuestions = $this->firebase->readAll('questions');
@@ -283,9 +268,6 @@ class QuestionnaireController extends Controller
         ]);
     }
 
-    /**
-     * Get all sub categories (optionally filtered by main category)
-     */
     public function getAllSubCategories(Request $request)
     {
         $mainCategory = $request->input('main_category', '');
@@ -343,7 +325,6 @@ class QuestionnaireController extends Controller
             return ($a['id'] ?? 0) - ($b['id'] ?? 0);
         });
 
-        // Get unique categories for filters
         $mainCategories = [];
         $subCategories = [];
         $categorizedSubCategories = [];
@@ -351,8 +332,7 @@ class QuestionnaireController extends Controller
         foreach ($allQuestions as $question) {
             if (isset($question['main_category'])) {
                 $mainCategories[$question['main_category']] = true;
-                
-                // Build categorized sub categories
+
                 if (isset($question['sub_category'])) {
                     $mainCat = $question['main_category'];
                     $subCat = $question['sub_category'];
@@ -373,7 +353,6 @@ class QuestionnaireController extends Controller
         $subCategories = array_keys($subCategories);
         sort($subCategories);
         
-        // Convert categorized sub categories to arrays
         foreach ($categorizedSubCategories as &$subCats) {
             $subCats = array_keys($subCats);
             sort($subCats);
@@ -415,7 +394,6 @@ class QuestionnaireController extends Controller
             'sub_category' => 'nullable|string|max:255',
         ]);
 
-        // Check for duplicate question ID
         $allQuestions = $this->firebase->readAll('questions');
         $existingIds = [];
         foreach ($allQuestions as $q) {
@@ -423,10 +401,7 @@ class QuestionnaireController extends Controller
                 $existingIds[] = $q['id'];
             }
         }
-        
-        // if (in_array($validated['id'], $existingIds)) {
-        //     return back()->withErrors(['id' => 'Question ID already exists'])->withInput();
-        // }
+
 
         $validated['created_at'] = now()->toIso8601String();
         $validated['updated_at'] = now()->toIso8601String();
@@ -448,14 +423,12 @@ class QuestionnaireController extends Controller
             'main_category' => 'nullable|string|max:255',
             'sub_category' => 'nullable|string|max:255',
         ]);
-
-        // Get existing question to check ID
+        
         $existingQuestion = $this->firebase->read('questions', $id);
         if (!$existingQuestion) {
             return back()->with('error', 'Question not found');
         }
 
-        // If ID is being changed, check for duplicates
         if ($validated['id'] != $existingQuestion['id']) {
             $allQuestions = $this->firebase->readAll('questions');
             $existingIds = [];
